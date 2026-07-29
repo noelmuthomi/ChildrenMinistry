@@ -16,11 +16,9 @@ function showPage(pageId) {
   document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
   const page = document.getElementById(pageId);
   if (page) page.classList.remove('hidden');
-  // Update active nav link
   document.querySelectorAll('.nav-scroll a').forEach(a => a.classList.remove('active'));
   const navLink = document.querySelector(`.nav-scroll a[data-page="${pageId}"]`);
   if (navLink) navLink.classList.add('active');
-  // Scroll to top on mobile
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -38,10 +36,9 @@ function showMessage(elementId, text, isError = false) {
   const el = document.getElementById(elementId);
   if (!el) return;
   el.textContent = text;
-  el.style.display = text ? 'block' : 'none';
   el.className = `message ${isError ? 'error' : 'success'}`;
+  el.style.display = text ? 'block' : 'none';
 }
-// We'll style messages inline – they will use card styles.
 
 // ---- Login ----
 async function handleLogin(e) {
@@ -52,6 +49,7 @@ async function handleLogin(e) {
   if (result.success) {
     currentUser = result;
     document.getElementById('userNameDisplay').textContent = result.name || 'User';
+    updateNavForRole();
     showPage('dashboard');
     loadDashboard();
   } else {
@@ -65,13 +63,17 @@ async function loadDashboard() {
     const ann = await apiCall('getAnnouncements', {});
     const container = document.getElementById('announcementsList');
     if (ann.length === 0) {
-      container.innerHTML = '<p style="color: var(--text-light);">No announcements yet.</p>';
+      container.innerHTML = '<p class="text-muted text-sm">No announcements yet.</p>';
     } else {
       container.innerHTML = ann.map(a => `
         <div class="announcement-item ${a.priority === 'High' ? 'priority-high' : ''}">
           <div class="title">${a.title}</div>
-          <div>${a.content}</div>
-          <div class="meta">📍 ${a.congregation || 'All'} · ${a.department || 'All'} · ${a.priority || 'Normal'}</div>
+          <div class="content">${a.content}</div>
+          <div class="meta">
+            <span class="tag">📍 ${a.congregation || 'All'}</span>
+            <span class="tag">📋 ${a.department || 'All'}</span>
+            <span class="tag">🏷️ ${a.priority || 'Normal'}</span>
+          </div>
         </div>
       `).join('');
     }
@@ -137,7 +139,7 @@ async function loadAttendanceLearners() {
   learners = data;
   const container = document.getElementById('attendanceGrid');
   if (data.length === 0) {
-    container.innerHTML = '<p style="grid-column:1/-1; text-align:center; color: var(--text-light);">No learners found.</p>';
+    container.innerHTML = '<p class="text-muted text-sm" style="grid-column:1/-1; text-align:center; padding:20px 0;">No learners found for this selection.</p>';
     return;
   }
   container.innerHTML = data.map((l, idx) => {
@@ -197,17 +199,17 @@ async function loadUsers() {
     const users = await apiCall('adminUsers', {});
     const tbody = document.getElementById('userTableBody');
     if (!users || users.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No users</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="text-muted text-sm" style="text-align:center; padding:20px;">No users found</td></tr>';
       return;
     }
     tbody.innerHTML = users.map((u, i) => `
       <tr>
-        <td>${u.name || ''}</td>
+        <td><strong>${u.name || ''}</strong></td>
         <td>${u.email || ''}</td>
-        <td>${u.role || 'teacher'}</td>
+        <td><span class="badge badge-info">${u.role || 'teacher'}</span></td>
         <td>${u.congregation || '-'}</td>
         <td>${u.department || '-'}</td>
-        <td><span class="${u.active === 'false' ? 'badge-inactive' : 'badge-active'}">${u.active === 'false' ? 'Inactive' : 'Active'}</span></td>
+        <td><span class="badge ${u.active === 'false' ? 'badge-danger' : 'badge-success'}">${u.active === 'false' ? 'Inactive' : 'Active'}</span></td>
         <td><button class="btn btn-danger btn-sm" onclick="deactivateUser(${i})">Deactivate</button></td>
       </tr>
     `).join('');
@@ -238,9 +240,7 @@ async function createUser(e) {
 
 async function deactivateUser(rowIndex) {
   if (!confirm('Deactivate this user?')) return;
-  // We need to find the user by email – for simplicity we just alert.
-  // In a full version, we would pass the email.
-  alert('Deactivation: In a full version, this would mark the user inactive.\nYou can manually set active=false in the sheet.');
+  alert('Deactivation: You can manually set active=false in the users sheet.');
 }
 
 async function postAnnouncement(e) {
@@ -287,6 +287,14 @@ async function saveConfig(e) {
   showMessage('configMessage', result.message || '✅ Config saved!', false);
 }
 
+// ---- Hide admin tabs if user is not admin ----
+function updateNavForRole() {
+  const isAdmin = currentUser && currentUser.role === 'admin';
+  document.querySelectorAll('.nav-scroll a.admin-only').forEach(el => {
+    el.style.display = isAdmin ? 'inline-flex' : 'none';
+  });
+}
+
 // ---- Render App ----
 document.addEventListener('DOMContentLoaded', () => {
   const app = document.getElementById('app');
@@ -295,45 +303,59 @@ document.addEventListener('DOMContentLoaded', () => {
     <div id="login" class="page">
       <div class="login-wrapper">
         <div class="login-card">
-          <div class="logo">⛪</div>
-          <h1>PCEA Children Ministry</h1>
-          <div class="sub">Kasarani West Parish · Brigade &amp; Church School</div>
+          <span class="logo-icon">⛪</span>
+          <div class="logo-text">PCEA <span>Ministry</span></div>
+          <div class="sub"><strong>Kasarani West Parish</strong><br>Brigade &amp; Church School</div>
           <form onsubmit="handleLogin(event)">
             <input type="email" id="loginEmail" placeholder="Email address" required>
             <input type="password" id="loginPassword" placeholder="Password" required>
-            <div id="loginMessage" style="color:#b91c1c; margin-bottom:12px; font-weight:500; min-height:24px;"></div>
-            <button type="submit">Sign In</button>
+            <div id="loginMessage"></div>
+            <button type="submit" class="btn-primary">Sign In</button>
           </form>
-          <div class="footer-text">© ${new Date().getFullYear()} PCEA Kasarani West</div>
+          <div class="footer-text">© ${new Date().getFullYear()} PCEA Kasarani West · Children Ministry</div>
         </div>
       </div>
     </div>
 
-    <!-- DASHBOARD (logged-in) -->
+    <!-- DASHBOARD -->
     <div id="dashboard" class="page hidden">
       <!-- Top Bar -->
       <div class="top-bar">
-        <div class="brand">⛪ PCEA Ministry <span>v2</span></div>
+        <div class="brand" onclick="navigateTo('dashboard')">
+          <span class="logo-emblem">⛪</span>
+          <span class="brand-name">PCEA <span>Ministry</span></span>
+          <span class="badge">v2</span>
+        </div>
         <div class="user-greeting">👋 Welcome, <strong id="userNameDisplay">User</strong></div>
       </div>
       <!-- Navigation -->
       <div class="nav-scroll">
-        <a href="#" data-page="dashboard" class="active" onclick="navigateTo('dashboard')">📊 Dashboard</a>
-        <a href="#" data-page="enrol-brigade" onclick="navigateTo('enrol-brigade')">🎖️ Enrol Brigade</a>
-        <a href="#" data-page="enrol-churchschool" onclick="navigateTo('enrol-churchschool')">📚 Enrol CS</a>
-        <a href="#" data-page="attendance" onclick="navigateTo('attendance')">✅ Attendance</a>
-        <a href="#" data-page="admin" onclick="navigateTo('admin')" class="admin-only">⚙️ Admin</a>
-        <a href="#" data-page="config" onclick="navigateTo('config')" class="admin-only">🔧 Config</a>
-        <a href="#" class="logout-btn" onclick="currentUser=null; showPage('login')">🚪 Logout</a>
+        <a href="#" data-page="dashboard" class="active" onclick="navigateTo('dashboard')"><span class="nav-icon">📊</span> Dashboard</a>
+        <a href="#" data-page="enrol-brigade" onclick="navigateTo('enrol-brigade')"><span class="nav-icon">🎖️</span> Enrol Brigade</a>
+        <a href="#" data-page="enrol-churchschool" onclick="navigateTo('enrol-churchschool')"><span class="nav-icon">📚</span> Enrol CS</a>
+        <a href="#" data-page="attendance" onclick="navigateTo('attendance')"><span class="nav-icon">✅</span> Attendance</a>
+        <a href="#" data-page="admin" onclick="navigateTo('admin')" class="admin-only"><span class="nav-icon">⚙️</span> Admin</a>
+        <a href="#" data-page="config" onclick="navigateTo('config')" class="admin-only"><span class="nav-icon">🔧</span> Config</a>
+        <a href="#" class="logout-btn" onclick="currentUser=null; showPage('login')"><span class="nav-icon">🚪</span> Logout</a>
       </div>
 
-      <!-- Dashboard Content -->
+      <!-- Stats -->
       <div class="stats-grid">
-        <div class="stat-card"><span class="number" id="brigadeCount">0</span><span class="label">Brigade Learners</span></div>
-        <div class="stat-card"><span class="number" id="csCount">0</span><span class="label">Church School Learners</span></div>
+        <div class="stat-card">
+          <span class="stat-icon">🎖️</span>
+          <span class="number green" id="brigadeCount">0</span>
+          <span class="label">Brigade Learners</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">📚</span>
+          <span class="number gold" id="csCount">0</span>
+          <span class="label">Church School Learners</span>
+        </div>
       </div>
+
+      <!-- Announcements -->
       <div class="card">
-        <div class="card-header">📢 Announcements</div>
+        <div class="card-header"><span class="icon">📢</span> Announcements</div>
         <div id="announcementsList"></div>
       </div>
     </div>
@@ -341,28 +363,29 @@ document.addEventListener('DOMContentLoaded', () => {
     <!-- ENROL BRIGADE -->
     <div id="enrol-brigade" class="page hidden">
       <div class="card">
-        <div class="card-header">🎖️ Enrol Brigade Learner</div>
-        <div id="brigadeMessage" style="margin-bottom:12px; font-weight:500; min-height:24px;"></div>
+        <div class="card-header"><span class="icon">🎖️</span> Enrol Brigade Learner</div>
+        <div id="brigadeMessage"></div>
         <form onsubmit="enrolBrigade(event)">
-          <div class="form-group"><label>Full Name *</label><input type="text" id="bName" required></div>
+          <div class="form-group"><label>Full Name <span class="required">*</span></label><input type="text" id="bName" required></div>
           <div class="form-group"><label>Phone</label><input type="tel" id="bPhone"></div>
           <div class="form-group"><label>Email</label><input type="email" id="bEmail"></div>
-          <div class="form-group"><label>Congregation *</label>
+          <div class="form-group"><label>Congregation <span class="required">*</span></label>
             <select id="bCongregation" required><option>Kasarani</option><option>Joyvalley</option></select>
           </div>
           <div class="form-group"><label>Badge</label>
-            <select id="bBadge"><option value="">Select</option><option>Anchor</option><option>Compass</option><option>Pathfinder</option><option>Pioneer</option><option>Ranger</option><option>Explorer</option></select>
+            <select id="bBadge"><option value="">Select Badge</option><option>Anchor</option><option>Compass</option><option>Pathfinder</option><option>Pioneer</option><option>Ranger</option><option>Explorer</option></select>
           </div>
           <div class="form-group"><label>Age</label><input type="number" id="bAge"></div>
           <div class="form-group"><label>Gender</label>
             <select id="bGender"><option value="">Select</option><option>Male</option><option>Female</option></select>
           </div>
           <hr>
+          <div class="section-subtitle">Parent / Guardian Details</div>
           <div class="form-group"><label>Parent Name</label><input type="text" id="bParentName"></div>
           <div class="form-group"><label>Parent Phone</label><input type="tel" id="bParentPhone"></div>
           <div class="form-group"><label>Parent Email</label><input type="email" id="bParentEmail"></div>
           <div class="form-group"><label>Address</label><input type="text" id="bAddress"></div>
-          <div class="form-group"><label>Medical Info</label><input type="text" id="bMedical"></div>
+          <div class="form-group"><label>Medical Info</label><input type="text" id="bMedical" placeholder="Allergies, conditions..."></div>
           <div class="form-group"><label>Emergency Contact</label><input type="text" id="bEmergency"></div>
           <button type="submit" class="btn btn-gold btn-block">🎯 Enrol Brigade</button>
         </form>
@@ -372,28 +395,29 @@ document.addEventListener('DOMContentLoaded', () => {
     <!-- ENROL CHURCH SCHOOL -->
     <div id="enrol-churchschool" class="page hidden">
       <div class="card">
-        <div class="card-header">📚 Enrol Church School Learner</div>
-        <div id="csMessage" style="margin-bottom:12px; font-weight:500; min-height:24px;"></div>
+        <div class="card-header"><span class="icon">📚</span> Enrol Church School Learner</div>
+        <div id="csMessage"></div>
         <form onsubmit="enrolCS(event)">
-          <div class="form-group"><label>Full Name *</label><input type="text" id="csName" required></div>
+          <div class="form-group"><label>Full Name <span class="required">*</span></label><input type="text" id="csName" required></div>
           <div class="form-group"><label>Phone</label><input type="tel" id="csPhone"></div>
           <div class="form-group"><label>Email</label><input type="email" id="csEmail"></div>
-          <div class="form-group"><label>Congregation *</label>
+          <div class="form-group"><label>Congregation <span class="required">*</span></label>
             <select id="csCongregation" required><option>Kasarani</option><option>Joyvalley</option></select>
           </div>
           <div class="form-group"><label>Class</label>
-            <select id="csClass"><option value="">Select</option><option>Pre-Primary</option><option>Lower Primary</option><option>Upper Primary</option><option>Junior High</option></select>
+            <select id="csClass"><option value="">Select Class</option><option>Pre-Primary</option><option>Lower Primary</option><option>Upper Primary</option><option>Junior High</option></select>
           </div>
           <div class="form-group"><label>Age</label><input type="number" id="csAge"></div>
           <div class="form-group"><label>Gender</label>
             <select id="csGender"><option value="">Select</option><option>Male</option><option>Female</option></select>
           </div>
           <hr>
+          <div class="section-subtitle">Parent / Guardian Details</div>
           <div class="form-group"><label>Parent Name</label><input type="text" id="csParentName"></div>
           <div class="form-group"><label>Parent Phone</label><input type="tel" id="csParentPhone"></div>
           <div class="form-group"><label>Parent Email</label><input type="email" id="csParentEmail"></div>
           <div class="form-group"><label>Address</label><input type="text" id="csAddress"></div>
-          <div class="form-group"><label>Medical Info</label><input type="text" id="csMedical"></div>
+          <div class="form-group"><label>Medical Info</label><input type="text" id="csMedical" placeholder="Allergies, conditions..."></div>
           <button type="submit" class="btn btn-gold btn-block">📖 Enrol Church School</button>
         </form>
       </div>
@@ -402,43 +426,45 @@ document.addEventListener('DOMContentLoaded', () => {
     <!-- ATTENDANCE -->
     <div id="attendance" class="page hidden">
       <div class="card">
-        <div class="card-header">✅ Take Attendance</div>
-        <div id="attMessage" style="margin-bottom:12px; font-weight:500; min-height:24px;"></div>
+        <div class="card-header"><span class="icon">✅</span> Take Attendance</div>
+        <div id="attMessage"></div>
         <div class="form-group"><label>Department</label>
           <select id="attDept" onchange="loadAttendanceLearners()"><option value="brigade">Brigade</option><option value="church-school">Church School</option></select>
         </div>
         <div class="form-group"><label>Congregation</label>
           <select id="attCong" onchange="loadAttendanceLearners()"><option>Kasarani</option><option>Joyvalley</option></select>
         </div>
-        <div class="form-group"><label>Class / Badge (optional)</label><input type="text" id="attClass"></div>
-        <div class="form-group"><label>Date *</label><input type="date" id="attDate"></div>
+        <div class="form-group"><label>Class / Badge (optional)</label><input type="text" id="attClass" placeholder="e.g. Anchor, Pre-Primary"></div>
+        <div class="form-group"><label>Date <span class="required">*</span></label><input type="date" id="attDate"></div>
         <div class="flex-between mb-16">
-          <span style="font-weight:600;">Tap to mark present/absent</span>
-          <button type="button" class="btn btn-sm" onclick="markAllPresent()">✅ Mark All Present</button>
+          <span class="text-sm text-muted">Tap to mark present / absent</span>
+          <button type="button" class="btn btn-outline btn-sm" onclick="markAllPresent()">✅ Mark All Present</button>
         </div>
         <div id="attendanceGrid" class="attendance-grid"></div>
-        <button class="btn btn-gold btn-block mt-16" onclick="saveAttendance()">💾 Save Attendance</button>
+        <button class="btn btn-primary btn-block mt-16" onclick="saveAttendance()">💾 Save Attendance</button>
       </div>
     </div>
 
     <!-- ADMIN -->
     <div id="admin" class="page hidden">
       <div class="card">
-        <div class="card-header">👤 Admin Panel</div>
-        <div id="adminMessage" style="margin-bottom:12px; font-weight:500; min-height:24px;"></div>
-        <h3 style="margin-bottom:8px;">👥 Users</h3>
+        <div class="card-header"><span class="icon">👤</span> Admin Panel</div>
+        <div id="adminMessage"></div>
+        
+        <div class="section-title">👥 Users</div>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Cong</th><th>Dept</th><th>Status</th><th>Action</th></tr></thead>
             <tbody id="userTableBody"></tbody>
           </table>
         </div>
+        
         <hr>
-        <h3 style="margin-bottom:12px;">➕ Create User</h3>
+        <div class="section-title">➕ Create User</div>
         <form onsubmit="createUser(event)">
-          <div class="form-group"><label>Name *</label><input type="text" id="newName" required></div>
-          <div class="form-group"><label>Email *</label><input type="email" id="newEmail" required></div>
-          <div class="form-group"><label>Password *</label><input type="password" id="newPassword" required></div>
+          <div class="form-group"><label>Name <span class="required">*</span></label><input type="text" id="newName" required></div>
+          <div class="form-group"><label>Email <span class="required">*</span></label><input type="email" id="newEmail" required></div>
+          <div class="form-group"><label>Password <span class="required">*</span></label><input type="password" id="newPassword" required></div>
           <div class="form-group"><label>Role</label>
             <select id="newRole"><option value="teacher">Teacher</option><option value="officer">Officer</option><option value="admin">Admin</option></select>
           </div>
@@ -448,20 +474,21 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="form-group"><label>Department</label>
             <select id="newDept"><option value="">None</option><option>Brigade</option><option>Church School</option><option>Both</option></select>
           </div>
-          <div class="form-group"><label>Classes (comma‑separated)</label><input type="text" id="newClasses"></div>
-          <div class="form-group"><label>Badges (comma‑separated)</label><input type="text" id="newBadges"></div>
-          <button type="submit" class="btn btn-block">👤 Create User</button>
+          <div class="form-group"><label>Classes</label><input type="text" id="newClasses" placeholder="Comma separated: Pre-Primary, Lower Primary"></div>
+          <div class="form-group"><label>Badges</label><input type="text" id="newBadges" placeholder="Comma separated: Anchor, Compass"></div>
+          <button type="submit" class="btn btn-primary btn-block">👤 Create User</button>
         </form>
+        
         <hr>
-        <h3 style="margin-bottom:12px;">📢 Post Announcement</h3>
+        <div class="section-title">📢 Post Announcement</div>
         <form onsubmit="postAnnouncement(event)">
-          <div class="form-group"><label>Title *</label><input type="text" id="annTitle" required></div>
-          <div class="form-group"><label>Content *</label><textarea id="annContent" required></textarea></div>
+          <div class="form-group"><label>Title <span class="required">*</span></label><input type="text" id="annTitle" required></div>
+          <div class="form-group"><label>Content <span class="required">*</span></label><textarea id="annContent" required></textarea></div>
           <div class="form-group"><label>Congregation</label>
-            <select id="annCong"><option value="All">All</option><option>Kasarani</option><option>Joyvalley</option></select>
+            <select id="annCong"><option value="All">All Congregations</option><option>Kasarani</option><option>Joyvalley</option></select>
           </div>
           <div class="form-group"><label>Department</label>
-            <select id="annDept"><option value="All">All</option><option>Brigade</option><option>Church School</option></select>
+            <select id="annDept"><option value="All">All Departments</option><option>Brigade</option><option>Church School</option></select>
           </div>
           <div class="form-group"><label>Priority</label>
             <select id="annPriority"><option value="Normal">Normal</option><option>Medium</option><option>High</option></select>
@@ -474,43 +501,20 @@ document.addEventListener('DOMContentLoaded', () => {
     <!-- CONFIG -->
     <div id="config" class="page hidden">
       <div class="card">
-        <div class="card-header">🔧 Configuration</div>
-        <div id="configMessage" style="margin-bottom:12px; font-weight:500; min-height:24px;"></div>
+        <div class="card-header"><span class="icon">🔧</span> Configuration</div>
+        <div id="configMessage"></div>
+        <div class="section-subtitle">Manage Google Form links for enrolment and attendance</div>
         <form onsubmit="saveConfig(event)">
-          <div class="form-group"><label>Brigade Enrolment Form URL</label><input type="url" id="cfgBrigadeForm" placeholder="https://..."></div>
-          <div class="form-group"><label>Church School Enrolment Form URL</label><input type="url" id="cfgCSForm" placeholder="https://..."></div>
-          <div class="form-group"><label>Brigade Attendance Form URL</label><input type="url" id="cfgBrigadeAtt" placeholder="https://..."></div>
-          <div class="form-group"><label>Church School Attendance Form URL</label><input type="url" id="cfgCSAtt" placeholder="https://..."></div>
-          <div class="form-group"><label>Announcements Form URL</label><input type="url" id="cfgAnnForm" placeholder="https://..."></div>
-          <button type="submit" class="btn btn-block">💾 Save Configuration</button>
+          <div class="form-group"><label>Brigade Enrolment Form URL</label><input type="url" id="cfgBrigadeForm" placeholder="https://docs.google.com/forms/..."></div>
+          <div class="form-group"><label>Church School Enrolment Form URL</label><input type="url" id="cfgCSForm" placeholder="https://docs.google.com/forms/..."></div>
+          <div class="form-group"><label>Brigade Attendance Form URL</label><input type="url" id="cfgBrigadeAtt" placeholder="https://docs.google.com/forms/..."></div>
+          <div class="form-group"><label>Church School Attendance Form URL</label><input type="url" id="cfgCSAtt" placeholder="https://docs.google.com/forms/..."></div>
+          <div class="form-group"><label>Announcements Form URL</label><input type="url" id="cfgAnnForm" placeholder="https://docs.google.com/forms/..."></div>
+          <button type="submit" class="btn btn-primary btn-block">💾 Save Configuration</button>
         </form>
       </div>
     </div>
   `;
-
-  // Hide admin-only nav items if user is not admin
-  // This is done dynamically on login via CSS – we'll handle it with a class
-  // We'll apply a filter in the navigation display later.
-  // For now, we show all nav items; the backend will reject admin-only API calls if not admin.
-  // But we also hide the tabs visually:
-  function updateNavForRole() {
-    const isAdmin = currentUser && currentUser.role === 'admin';
-    document.querySelectorAll('.nav-scroll a.admin-only').forEach(el => {
-      el.style.display = isAdmin ? 'inline-block' : 'none';
-    });
-  }
-  // Override navigateTo to call updateNav
-  const originalNavigate = navigateTo;
-  navigateTo = function(page) {
-    updateNavForRole();
-    originalNavigate(page);
-  };
-  // Also call on login
-  const originalLogin = handleLogin;
-  handleLogin = async function(e) {
-    await originalLogin(e);
-    if (currentUser) updateNavForRole();
-  };
 
   showPage('login');
 });
