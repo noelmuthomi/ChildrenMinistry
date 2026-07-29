@@ -1,5 +1,5 @@
-// app.js – Frontend for PCEA Ministry
-// CHANGE THIS LINE TO YOUR DEPLOYED SCRIPT URL
+// app.js – Beautiful, Responsive Frontend for PCEA Ministry
+// CHANGE THIS LINE TO YOUR DEPLOYED APPS SCRIPT URL
 const API_BASE = 'https://script.google.com/macros/s/AKfycbyFBi5X18gxETVCU_9p6i8Vksa1lstqq_3T_iG0SjOBaDwXmvBuFcqK4Rcq_6XHEeJe/exec';
 
 let currentUser = null;
@@ -10,6 +10,38 @@ function apiCall(method, params) {
   const url = `${API_BASE}?method=${method}&data=${encodeURIComponent(JSON.stringify(params))}`;
   return fetch(url).then(r => r.json());
 }
+
+// ---- Show page & update nav ----
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+  const page = document.getElementById(pageId);
+  if (page) page.classList.remove('hidden');
+  // Update active nav link
+  document.querySelectorAll('.nav-scroll a').forEach(a => a.classList.remove('active'));
+  const navLink = document.querySelector(`.nav-scroll a[data-page="${pageId}"]`);
+  if (navLink) navLink.classList.add('active');
+  // Scroll to top on mobile
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function navigateTo(page) {
+  if (!currentUser && page !== 'login') { showPage('login'); return; }
+  showPage(page);
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'attendance') loadAttendanceLearners();
+  if (page === 'admin') loadUsers();
+  if (page === 'config') loadConfig();
+}
+
+// ---- Show message helper ----
+function showMessage(elementId, text, isError = false) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  el.textContent = text;
+  el.style.display = text ? 'block' : 'none';
+  el.className = `message ${isError ? 'error' : 'success'}`;
+}
+// We'll style messages inline – they will use card styles.
 
 // ---- Login ----
 async function handleLogin(e) {
@@ -23,39 +55,36 @@ async function handleLogin(e) {
     showPage('dashboard');
     loadDashboard();
   } else {
-    alert('Login failed: ' + (result.error || 'Invalid credentials'));
+    showMessage('loginMessage', result.error || 'Invalid credentials', true);
   }
-}
-
-// ---- Page navigation ----
-function showPage(pageId) {
-  document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-  const page = document.getElementById(pageId);
-  if (page) page.classList.remove('hidden');
-}
-
-function navigateTo(page) {
-  if (!currentUser && page !== 'login') { showPage('login'); return; }
-  showPage(page);
-  if (page === 'dashboard') loadDashboard();
-  if (page === 'attendance') loadAttendanceLearners();
-  if (page === 'admin') loadUsers();
-  if (page === 'config') loadConfig();
 }
 
 // ---- Dashboard ----
 async function loadDashboard() {
-  const ann = await apiCall('getAnnouncements', {});
-  const container = document.getElementById('announcementsList');
-  container.innerHTML = ann.length ? ann.map(a => `<div><strong>${a.title}</strong><p>${a.content}</p></div>`).join('') : '<p>No announcements</p>';
-  // Counts
-  const brigade = await apiCall('getLearners', { department: 'brigade' });
-  const cs = await apiCall('getLearners', { department: 'church-school' });
-  document.getElementById('brigadeCount').textContent = brigade.length;
-  document.getElementById('csCount').textContent = cs.length;
+  try {
+    const ann = await apiCall('getAnnouncements', {});
+    const container = document.getElementById('announcementsList');
+    if (ann.length === 0) {
+      container.innerHTML = '<p style="color: var(--text-light);">No announcements yet.</p>';
+    } else {
+      container.innerHTML = ann.map(a => `
+        <div class="announcement-item ${a.priority === 'High' ? 'priority-high' : ''}">
+          <div class="title">${a.title}</div>
+          <div>${a.content}</div>
+          <div class="meta">📍 ${a.congregation || 'All'} · ${a.department || 'All'} · ${a.priority || 'Normal'}</div>
+        </div>
+      `).join('');
+    }
+    const brigade = await apiCall('getLearners', { department: 'brigade' });
+    const cs = await apiCall('getLearners', { department: 'church-school' });
+    document.getElementById('brigadeCount').textContent = brigade.length;
+    document.getElementById('csCount').textContent = cs.length;
+  } catch (e) {
+    console.error(e);
+  }
 }
 
-// ---- Enrolment functions (same as before) ----
+// ---- Enrol Brigade ----
 async function enrolBrigade(e) {
   e.preventDefault();
   const data = {
@@ -74,10 +103,11 @@ async function enrolBrigade(e) {
     emergencyContact: document.getElementById('bEmergency').value,
   };
   const result = await apiCall('enrolBrigade', data);
-  alert(result.message || 'Enrolled');
-  e.target.reset();
+  showMessage('brigadeMessage', result.message || '✅ Enrolled successfully!', false);
+  if (!result.error) e.target.reset();
 }
 
+// ---- Enrol Church School ----
 async function enrolCS(e) {
   e.preventDefault();
   const data = {
@@ -95,8 +125,8 @@ async function enrolCS(e) {
     medicalInfo: document.getElementById('csMedical').value,
   };
   const result = await apiCall('enrolChurchSchool', data);
-  alert(result.message || 'Enrolled');
-  e.target.reset();
+  showMessage('csMessage', result.message || '✅ Enrolled successfully!', false);
+  if (!result.error) e.target.reset();
 }
 
 // ---- Attendance ----
@@ -106,11 +136,19 @@ async function loadAttendanceLearners() {
   const data = await apiCall('getLearners', { department: dept, congregation: cong });
   learners = data;
   const container = document.getElementById('attendanceGrid');
+  if (data.length === 0) {
+    container.innerHTML = '<p style="grid-column:1/-1; text-align:center; color: var(--text-light);">No learners found.</p>';
+    return;
+  }
   container.innerHTML = data.map((l, idx) => {
     const name = l.Name || l.name || 'Unknown';
-    return `<div class="attendance-btn present" data-index="${idx}" onclick="toggleAttendance(${idx})">${name}<br><span class="status">✓</span></div>`;
+    return `<div class="attendance-btn present" data-index="${idx}" onclick="toggleAttendance(${idx})">
+      ${name}
+      <span class="status">✓</span>
+    </div>`;
   }).join('');
   window.attendanceState = data.map(() => true);
+  showMessage('attMessage', '', false);
 }
 
 function toggleAttendance(idx) {
@@ -121,12 +159,23 @@ function toggleAttendance(idx) {
   btn.querySelector('.status').textContent = state[idx] ? '✓' : '✗';
 }
 
+function markAllPresent() {
+  if (!learners.length) return;
+  const state = window.attendanceState;
+  learners.forEach((_, idx) => state[idx] = true);
+  document.querySelectorAll('.attendance-btn').forEach(btn => {
+    btn.className = 'attendance-btn present';
+    btn.querySelector('.status').textContent = '✓';
+  });
+}
+
 async function saveAttendance() {
   const dept = document.getElementById('attDept').value;
   const cong = document.getElementById('attCong').value;
   const cls = document.getElementById('attClass').value;
   const date = document.getElementById('attDate').value;
-  if (!date) { alert('Please select a date'); return; }
+  if (!date) { showMessage('attMessage', 'Please select a date.', true); return; }
+  if (!learners.length) { showMessage('attMessage', 'No learners to mark.', true); return; }
   const learnersList = learners.map((l, idx) => ({
     name: l.Name || l.name || 'Unknown',
     present: window.attendanceState[idx]
@@ -139,24 +188,32 @@ async function saveAttendance() {
     learners: learnersList,
     recordedBy: currentUser.name || 'app'
   });
-  alert(result.message || 'Attendance saved');
+  showMessage('attMessage', result.message || '✅ Attendance saved!', false);
 }
 
 // ---- Admin ----
 async function loadUsers() {
-  const users = await apiCall('adminUsers', {});
-  const tbody = document.getElementById('userTableBody');
-  tbody.innerHTML = users.map((u, i) => `
-    <tr>
-      <td>${u.name}</td>
-      <td>${u.email}</td>
-      <td>${u.role}</td>
-      <td>${u.congregation || '-'}</td>
-      <td>${u.department || '-'}</td>
-      <td>${u.active === 'false' ? 'Inactive' : 'Active'}</td>
-      <td><button onclick="deactivateUser(${i})">Deactivate</button></td>
-    </tr>
-  `).join('');
+  try {
+    const users = await apiCall('adminUsers', {});
+    const tbody = document.getElementById('userTableBody');
+    if (!users || users.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No users</td></tr>';
+      return;
+    }
+    tbody.innerHTML = users.map((u, i) => `
+      <tr>
+        <td>${u.name || ''}</td>
+        <td>${u.email || ''}</td>
+        <td>${u.role || 'teacher'}</td>
+        <td>${u.congregation || '-'}</td>
+        <td>${u.department || '-'}</td>
+        <td><span class="${u.active === 'false' ? 'badge-inactive' : 'badge-active'}">${u.active === 'false' ? 'Inactive' : 'Active'}</span></td>
+        <td><button class="btn btn-danger btn-sm" onclick="deactivateUser(${i})">Deactivate</button></td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 async function createUser(e) {
@@ -172,16 +229,18 @@ async function createUser(e) {
     badges: document.getElementById('newBadges').value,
   };
   const result = await apiCall('createUser', data);
-  alert(result.message || 'User created');
-  loadUsers();
-  e.target.reset();
+  showMessage('adminMessage', result.message || '✅ User created!', false);
+  if (!result.error) {
+    loadUsers();
+    e.target.reset();
+  }
 }
 
 async function deactivateUser(rowIndex) {
   if (!confirm('Deactivate this user?')) return;
-  // We need a way to identify the user – we can pass email, but for simplicity we'll use index
-  // This requires a more robust implementation; for now we just alert.
-  alert('Deactivation feature can be implemented further.');
+  // We need to find the user by email – for simplicity we just alert.
+  // In a full version, we would pass the email.
+  alert('Deactivation: In a full version, this would mark the user inactive.\nYou can manually set active=false in the sheet.');
 }
 
 async function postAnnouncement(e) {
@@ -194,19 +253,25 @@ async function postAnnouncement(e) {
     priority: document.getElementById('annPriority').value || 'Normal',
   };
   const result = await apiCall('postAnnouncement', data);
-  alert(result.message || 'Posted');
-  e.target.reset();
-  loadDashboard();
+  showMessage('adminMessage', result.message || '✅ Announcement posted!', false);
+  if (!result.error) {
+    e.target.reset();
+    loadDashboard();
+  }
 }
 
 // ---- Config ----
 async function loadConfig() {
-  const config = await apiCall('getConfig', {});
-  document.getElementById('cfgBrigadeForm').value = config.brigade_form_url || '';
-  document.getElementById('cfgCSForm').value = config.cs_form_url || '';
-  document.getElementById('cfgBrigadeAtt').value = config.brigade_attendance_form_url || '';
-  document.getElementById('cfgCSAtt').value = config.cs_attendance_form_url || '';
-  document.getElementById('cfgAnnForm').value = config.announcements_form_url || '';
+  try {
+    const config = await apiCall('getConfig', {});
+    document.getElementById('cfgBrigadeForm').value = config.brigade_form_url || '';
+    document.getElementById('cfgCSForm').value = config.cs_form_url || '';
+    document.getElementById('cfgBrigadeAtt').value = config.brigade_attendance_form_url || '';
+    document.getElementById('cfgCSAtt').value = config.cs_attendance_form_url || '';
+    document.getElementById('cfgAnnForm').value = config.announcements_form_url || '';
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 async function saveConfig(e) {
@@ -219,156 +284,233 @@ async function saveConfig(e) {
     announcements_form_url: document.getElementById('cfgAnnForm').value,
   };
   const result = await apiCall('saveConfig', data);
-  alert(result.message || 'Config saved');
+  showMessage('configMessage', result.message || '✅ Config saved!', false);
 }
 
-// ---- Render the app when page loads ----
+// ---- Render App ----
 document.addEventListener('DOMContentLoaded', () => {
   const app = document.getElementById('app');
-  // We embed the entire HTML structure inside app (as before)
   app.innerHTML = `
-    <!-- Login -->
+    <!-- LOGIN PAGE -->
     <div id="login" class="page">
-      <div class="card" style="max-width:400px;margin:40px auto;">
-        <h2>⛪ PCEA Children Ministry</h2>
-        <form onsubmit="handleLogin(event)">
-          <input type="email" id="loginEmail" placeholder="Email" required>
-          <input type="password" id="loginPassword" placeholder="Password" required>
-          <button type="submit">Login</button>
-        </form>
+      <div class="login-wrapper">
+        <div class="login-card">
+          <div class="logo">⛪</div>
+          <h1>PCEA Children Ministry</h1>
+          <div class="sub">Kasarani West Parish · Brigade &amp; Church School</div>
+          <form onsubmit="handleLogin(event)">
+            <input type="email" id="loginEmail" placeholder="Email address" required>
+            <input type="password" id="loginPassword" placeholder="Password" required>
+            <div id="loginMessage" style="color:#b91c1c; margin-bottom:12px; font-weight:500; min-height:24px;"></div>
+            <button type="submit">Sign In</button>
+          </form>
+          <div class="footer-text">© ${new Date().getFullYear()} PCEA Kasarani West</div>
+        </div>
       </div>
     </div>
-    <!-- Dashboard -->
+
+    <!-- DASHBOARD (logged-in) -->
     <div id="dashboard" class="page hidden">
-      <header>
-        <h1>PCEA Children Ministry</h1>
-        <p>Welcome, <span id="userNameDisplay">User</span></p>
-      </header>
-      <div class="nav">
-        <a href="#" onclick="navigateTo('dashboard')" class="active">Dashboard</a>
-        <a href="#" onclick="navigateTo('enrol-brigade')">Enrol Brigade</a>
-        <a href="#" onclick="navigateTo('enrol-churchschool')">Enrol Church School</a>
-        <a href="#" onclick="navigateTo('attendance')">Attendance</a>
-        <a href="#" onclick="navigateTo('admin')">Admin</a>
-        <a href="#" onclick="navigateTo('config')">Config</a>
-        <a href="#" onclick="currentUser=null; showPage('login')">Logout</a>
+      <!-- Top Bar -->
+      <div class="top-bar">
+        <div class="brand">⛪ PCEA Ministry <span>v2</span></div>
+        <div class="user-greeting">👋 Welcome, <strong id="userNameDisplay">User</strong></div>
+      </div>
+      <!-- Navigation -->
+      <div class="nav-scroll">
+        <a href="#" data-page="dashboard" class="active" onclick="navigateTo('dashboard')">📊 Dashboard</a>
+        <a href="#" data-page="enrol-brigade" onclick="navigateTo('enrol-brigade')">🎖️ Enrol Brigade</a>
+        <a href="#" data-page="enrol-churchschool" onclick="navigateTo('enrol-churchschool')">📚 Enrol CS</a>
+        <a href="#" data-page="attendance" onclick="navigateTo('attendance')">✅ Attendance</a>
+        <a href="#" data-page="admin" onclick="navigateTo('admin')" class="admin-only">⚙️ Admin</a>
+        <a href="#" data-page="config" onclick="navigateTo('config')" class="admin-only">🔧 Config</a>
+        <a href="#" class="logout-btn" onclick="currentUser=null; showPage('login')">🚪 Logout</a>
+      </div>
+
+      <!-- Dashboard Content -->
+      <div class="stats-grid">
+        <div class="stat-card"><span class="number" id="brigadeCount">0</span><span class="label">Brigade Learners</span></div>
+        <div class="stat-card"><span class="number" id="csCount">0</span><span class="label">Church School Learners</span></div>
       </div>
       <div class="card">
-        <h3>📊 Overview</h3>
-        <p>Brigade Learners: <strong id="brigadeCount">0</strong></p>
-        <p>Church School Learners: <strong id="csCount">0</strong></p>
-        <h4>📢 Announcements</h4>
+        <div class="card-header">📢 Announcements</div>
         <div id="announcementsList"></div>
       </div>
     </div>
-    <!-- Enrol Brigade -->
+
+    <!-- ENROL BRIGADE -->
     <div id="enrol-brigade" class="page hidden">
       <div class="card">
-        <h2>🎖️ Enrol Brigade Learner</h2>
+        <div class="card-header">🎖️ Enrol Brigade Learner</div>
+        <div id="brigadeMessage" style="margin-bottom:12px; font-weight:500; min-height:24px;"></div>
         <form onsubmit="enrolBrigade(event)">
-          <input type="text" id="bName" placeholder="Full Name *" required>
-          <input type="tel" id="bPhone" placeholder="Phone">
-          <input type="email" id="bEmail" placeholder="Email">
-          <select id="bCongregation" required><option>Kasarani</option><option>Joyvalley</option></select>
-          <select id="bBadge"><option value="">Badge</option><option>Anchor</option><option>Compass</option><option>Pathfinder</option><option>Pioneer</option><option>Ranger</option><option>Explorer</option></select>
-          <input type="number" id="bAge" placeholder="Age">
-          <select id="bGender"><option value="">Gender</option><option>Male</option><option>Female</option></select>
-          <input type="text" id="bParentName" placeholder="Parent Name">
-          <input type="tel" id="bParentPhone" placeholder="Parent Phone">
-          <input type="email" id="bParentEmail" placeholder="Parent Email">
-          <input type="text" id="bAddress" placeholder="Address">
-          <input type="text" id="bMedical" placeholder="Medical Info">
-          <input type="text" id="bEmergency" placeholder="Emergency Contact">
-          <button type="submit">Enrol Brigade</button>
+          <div class="form-group"><label>Full Name *</label><input type="text" id="bName" required></div>
+          <div class="form-group"><label>Phone</label><input type="tel" id="bPhone"></div>
+          <div class="form-group"><label>Email</label><input type="email" id="bEmail"></div>
+          <div class="form-group"><label>Congregation *</label>
+            <select id="bCongregation" required><option>Kasarani</option><option>Joyvalley</option></select>
+          </div>
+          <div class="form-group"><label>Badge</label>
+            <select id="bBadge"><option value="">Select</option><option>Anchor</option><option>Compass</option><option>Pathfinder</option><option>Pioneer</option><option>Ranger</option><option>Explorer</option></select>
+          </div>
+          <div class="form-group"><label>Age</label><input type="number" id="bAge"></div>
+          <div class="form-group"><label>Gender</label>
+            <select id="bGender"><option value="">Select</option><option>Male</option><option>Female</option></select>
+          </div>
+          <hr>
+          <div class="form-group"><label>Parent Name</label><input type="text" id="bParentName"></div>
+          <div class="form-group"><label>Parent Phone</label><input type="tel" id="bParentPhone"></div>
+          <div class="form-group"><label>Parent Email</label><input type="email" id="bParentEmail"></div>
+          <div class="form-group"><label>Address</label><input type="text" id="bAddress"></div>
+          <div class="form-group"><label>Medical Info</label><input type="text" id="bMedical"></div>
+          <div class="form-group"><label>Emergency Contact</label><input type="text" id="bEmergency"></div>
+          <button type="submit" class="btn btn-gold btn-block">🎯 Enrol Brigade</button>
         </form>
       </div>
     </div>
-    <!-- Enrol Church School -->
+
+    <!-- ENROL CHURCH SCHOOL -->
     <div id="enrol-churchschool" class="page hidden">
       <div class="card">
-        <h2>📚 Enrol Church School Learner</h2>
+        <div class="card-header">📚 Enrol Church School Learner</div>
+        <div id="csMessage" style="margin-bottom:12px; font-weight:500; min-height:24px;"></div>
         <form onsubmit="enrolCS(event)">
-          <input type="text" id="csName" placeholder="Full Name *" required>
-          <input type="tel" id="csPhone" placeholder="Phone">
-          <input type="email" id="csEmail" placeholder="Email">
-          <select id="csCongregation" required><option>Kasarani</option><option>Joyvalley</option></select>
-          <select id="csClass"><option value="">Class</option><option>Pre-Primary</option><option>Lower Primary</option><option>Upper Primary</option><option>Junior High</option></select>
-          <input type="number" id="csAge" placeholder="Age">
-          <select id="csGender"><option value="">Gender</option><option>Male</option><option>Female</option></select>
-          <input type="text" id="csParentName" placeholder="Parent Name">
-          <input type="tel" id="csParentPhone" placeholder="Parent Phone">
-          <input type="email" id="csParentEmail" placeholder="Parent Email">
-          <input type="text" id="csAddress" placeholder="Address">
-          <input type="text" id="csMedical" placeholder="Medical Info">
-          <button type="submit">Enrol Church School</button>
+          <div class="form-group"><label>Full Name *</label><input type="text" id="csName" required></div>
+          <div class="form-group"><label>Phone</label><input type="tel" id="csPhone"></div>
+          <div class="form-group"><label>Email</label><input type="email" id="csEmail"></div>
+          <div class="form-group"><label>Congregation *</label>
+            <select id="csCongregation" required><option>Kasarani</option><option>Joyvalley</option></select>
+          </div>
+          <div class="form-group"><label>Class</label>
+            <select id="csClass"><option value="">Select</option><option>Pre-Primary</option><option>Lower Primary</option><option>Upper Primary</option><option>Junior High</option></select>
+          </div>
+          <div class="form-group"><label>Age</label><input type="number" id="csAge"></div>
+          <div class="form-group"><label>Gender</label>
+            <select id="csGender"><option value="">Select</option><option>Male</option><option>Female</option></select>
+          </div>
+          <hr>
+          <div class="form-group"><label>Parent Name</label><input type="text" id="csParentName"></div>
+          <div class="form-group"><label>Parent Phone</label><input type="tel" id="csParentPhone"></div>
+          <div class="form-group"><label>Parent Email</label><input type="email" id="csParentEmail"></div>
+          <div class="form-group"><label>Address</label><input type="text" id="csAddress"></div>
+          <div class="form-group"><label>Medical Info</label><input type="text" id="csMedical"></div>
+          <button type="submit" class="btn btn-gold btn-block">📖 Enrol Church School</button>
         </form>
       </div>
     </div>
-    <!-- Attendance -->
+
+    <!-- ATTENDANCE -->
     <div id="attendance" class="page hidden">
       <div class="card">
-        <h2>✅ Take Attendance</h2>
-        <select id="attDept" onchange="loadAttendanceLearners()"><option value="brigade">Brigade</option><option value="church-school">Church School</option></select>
-        <select id="attCong" onchange="loadAttendanceLearners()"><option>Kasarani</option><option>Joyvalley</option></select>
-        <input type="text" id="attClass" placeholder="Class / Badge (optional)">
-        <input type="date" id="attDate">
+        <div class="card-header">✅ Take Attendance</div>
+        <div id="attMessage" style="margin-bottom:12px; font-weight:500; min-height:24px;"></div>
+        <div class="form-group"><label>Department</label>
+          <select id="attDept" onchange="loadAttendanceLearners()"><option value="brigade">Brigade</option><option value="church-school">Church School</option></select>
+        </div>
+        <div class="form-group"><label>Congregation</label>
+          <select id="attCong" onchange="loadAttendanceLearners()"><option>Kasarani</option><option>Joyvalley</option></select>
+        </div>
+        <div class="form-group"><label>Class / Badge (optional)</label><input type="text" id="attClass"></div>
+        <div class="form-group"><label>Date *</label><input type="date" id="attDate"></div>
+        <div class="flex-between mb-16">
+          <span style="font-weight:600;">Tap to mark present/absent</span>
+          <button type="button" class="btn btn-sm" onclick="markAllPresent()">✅ Mark All Present</button>
+        </div>
         <div id="attendanceGrid" class="attendance-grid"></div>
-        <button onclick="saveAttendance()">Save Attendance</button>
+        <button class="btn btn-gold btn-block mt-16" onclick="saveAttendance()">💾 Save Attendance</button>
       </div>
     </div>
-    <!-- Admin -->
+
+    <!-- ADMIN -->
     <div id="admin" class="page hidden">
       <div class="card">
-        <h2>👤 Admin Panel</h2>
-        <h3>Users</h3>
-        <table border="1" cellpadding="5" style="width:100%;border-collapse:collapse;">
-          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Cong</th><th>Dept</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody id="userTableBody"></tbody>
-        </table>
+        <div class="card-header">👤 Admin Panel</div>
+        <div id="adminMessage" style="margin-bottom:12px; font-weight:500; min-height:24px;"></div>
+        <h3 style="margin-bottom:8px;">👥 Users</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Cong</th><th>Dept</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="userTableBody"></tbody>
+          </table>
+        </div>
         <hr>
-        <h3>Create User</h3>
+        <h3 style="margin-bottom:12px;">➕ Create User</h3>
         <form onsubmit="createUser(event)">
-          <input type="text" id="newName" placeholder="Name *" required>
-          <input type="email" id="newEmail" placeholder="Email *" required>
-          <input type="password" id="newPassword" placeholder="Password *" required>
-          <select id="newRole"><option value="teacher">Teacher</option><option value="officer">Officer</option><option value="admin">Admin</option></select>
-          <select id="newCong"><option value="">Congregation</option><option>Kasarani</option><option>Joyvalley</option></select>
-          <select id="newDept"><option value="">Department</option><option>Brigade</option><option>Church School</option><option>Both</option></select>
-          <input type="text" id="newClasses" placeholder="Classes (comma separated)">
-          <input type="text" id="newBadges" placeholder="Badges (comma separated)">
-          <button type="submit">Create User</button>
+          <div class="form-group"><label>Name *</label><input type="text" id="newName" required></div>
+          <div class="form-group"><label>Email *</label><input type="email" id="newEmail" required></div>
+          <div class="form-group"><label>Password *</label><input type="password" id="newPassword" required></div>
+          <div class="form-group"><label>Role</label>
+            <select id="newRole"><option value="teacher">Teacher</option><option value="officer">Officer</option><option value="admin">Admin</option></select>
+          </div>
+          <div class="form-group"><label>Congregation</label>
+            <select id="newCong"><option value="">None</option><option>Kasarani</option><option>Joyvalley</option></select>
+          </div>
+          <div class="form-group"><label>Department</label>
+            <select id="newDept"><option value="">None</option><option>Brigade</option><option>Church School</option><option>Both</option></select>
+          </div>
+          <div class="form-group"><label>Classes (comma‑separated)</label><input type="text" id="newClasses"></div>
+          <div class="form-group"><label>Badges (comma‑separated)</label><input type="text" id="newBadges"></div>
+          <button type="submit" class="btn btn-block">👤 Create User</button>
         </form>
         <hr>
-        <h3>Post Announcement</h3>
+        <h3 style="margin-bottom:12px;">📢 Post Announcement</h3>
         <form onsubmit="postAnnouncement(event)">
-          <input type="text" id="annTitle" placeholder="Title *" required>
-          <textarea id="annContent" placeholder="Content *" required></textarea>
-          <select id="annCong"><option value="All">All Congregations</option><option>Kasarani</option><option>Joyvalley</option></select>
-          <select id="annDept"><option value="All">All Departments</option><option>Brigade</option><option>Church School</option></select>
-          <select id="annPriority"><option value="Normal">Normal</option><option>Medium</option><option>High</option></select>
-          <button type="submit">Post</button>
+          <div class="form-group"><label>Title *</label><input type="text" id="annTitle" required></div>
+          <div class="form-group"><label>Content *</label><textarea id="annContent" required></textarea></div>
+          <div class="form-group"><label>Congregation</label>
+            <select id="annCong"><option value="All">All</option><option>Kasarani</option><option>Joyvalley</option></select>
+          </div>
+          <div class="form-group"><label>Department</label>
+            <select id="annDept"><option value="All">All</option><option>Brigade</option><option>Church School</option></select>
+          </div>
+          <div class="form-group"><label>Priority</label>
+            <select id="annPriority"><option value="Normal">Normal</option><option>Medium</option><option>High</option></select>
+          </div>
+          <button type="submit" class="btn btn-gold btn-block">📢 Post Announcement</button>
         </form>
       </div>
     </div>
-    <!-- Config -->
+
+    <!-- CONFIG -->
     <div id="config" class="page hidden">
       <div class="card">
-        <h2>🔧 Configuration</h2>
+        <div class="card-header">🔧 Configuration</div>
+        <div id="configMessage" style="margin-bottom:12px; font-weight:500; min-height:24px;"></div>
         <form onsubmit="saveConfig(event)">
-          <label>Brigade Enrolment Form URL</label>
-          <input type="url" id="cfgBrigadeForm" placeholder="https://...">
-          <label>Church School Enrolment Form URL</label>
-          <input type="url" id="cfgCSForm" placeholder="https://...">
-          <label>Brigade Attendance Form URL</label>
-          <input type="url" id="cfgBrigadeAtt" placeholder="https://...">
-          <label>Church School Attendance Form URL</label>
-          <input type="url" id="cfgCSAtt" placeholder="https://...">
-          <label>Announcements Form URL</label>
-          <input type="url" id="cfgAnnForm" placeholder="https://...">
-          <button type="submit">Save Configuration</button>
+          <div class="form-group"><label>Brigade Enrolment Form URL</label><input type="url" id="cfgBrigadeForm" placeholder="https://..."></div>
+          <div class="form-group"><label>Church School Enrolment Form URL</label><input type="url" id="cfgCSForm" placeholder="https://..."></div>
+          <div class="form-group"><label>Brigade Attendance Form URL</label><input type="url" id="cfgBrigadeAtt" placeholder="https://..."></div>
+          <div class="form-group"><label>Church School Attendance Form URL</label><input type="url" id="cfgCSAtt" placeholder="https://..."></div>
+          <div class="form-group"><label>Announcements Form URL</label><input type="url" id="cfgAnnForm" placeholder="https://..."></div>
+          <button type="submit" class="btn btn-block">💾 Save Configuration</button>
         </form>
       </div>
     </div>
   `;
+
+  // Hide admin-only nav items if user is not admin
+  // This is done dynamically on login via CSS – we'll handle it with a class
+  // We'll apply a filter in the navigation display later.
+  // For now, we show all nav items; the backend will reject admin-only API calls if not admin.
+  // But we also hide the tabs visually:
+  function updateNavForRole() {
+    const isAdmin = currentUser && currentUser.role === 'admin';
+    document.querySelectorAll('.nav-scroll a.admin-only').forEach(el => {
+      el.style.display = isAdmin ? 'inline-block' : 'none';
+    });
+  }
+  // Override navigateTo to call updateNav
+  const originalNavigate = navigateTo;
+  navigateTo = function(page) {
+    updateNavForRole();
+    originalNavigate(page);
+  };
+  // Also call on login
+  const originalLogin = handleLogin;
+  handleLogin = async function(e) {
+    await originalLogin(e);
+    if (currentUser) updateNavForRole();
+  };
+
   showPage('login');
 });
