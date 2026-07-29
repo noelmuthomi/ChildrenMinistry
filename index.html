@@ -1,18 +1,1602 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>PCEA Children Ministry</title>
-  <meta name="theme-color" content="#1a5c2a" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
-  <link rel="manifest" href="manifest.json" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>PCEA Children Ministry</title>
+    <meta name="theme-color" content="#0a2463" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <style>
+        /* ===== RESET & VARIABLES ===== */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --pcea-blue: #0a2463;
+            --pcea-blue-dark: #061a47;
+            --pcea-blue-light: #1a3d8a;
+            --pcea-red: #d32f2f;
+            --pcea-red-light: #fde8e8;
+            --pcea-gold: #c9a84c;
+            --pcea-gold-light: #f5edd6;
+            --pcea-cream: #fdfaf3;
+            --white: #ffffff;
+            --bg: #f5f6fa;
+            --text: #1a1a2e;
+            --text-light: #5a6a7e;
+            --text-muted: #8a9aa8;
+            --shadow: 0 4px 20px rgba(10, 36, 99, 0.08);
+            --shadow-hover: 0 8px 40px rgba(10, 36, 99, 0.14);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e8ecf0;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--pcea-blue);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--pcea-blue-light);
+        }
+
+        /* ===== APP CONTAINER ===== */
+        #app {
+            max-width: 1024px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        /* ===== UTILITY ===== */
+        .hidden {
+            display: none !important;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .text-muted {
+            color: var(--text-muted);
+        }
+        .text-sm {
+            font-size: 0.85rem;
+        }
+        .mt-16 {
+            margin-top: 16px;
+        }
+        .mb-16 {
+            margin-bottom: 16px;
+        }
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px 24px;
+            margin-bottom: 20px;
+            transition: box-shadow var(--transition);
+            border: 1px solid rgba(10, 36, 99, 0.04);
+        }
+        .card:hover {
+            box-shadow: var(--shadow-hover);
+        }
+        .card-header {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text);
+            letter-spacing: -0.01em;
+        }
+        .card-header .icon {
+            font-size: 1.5rem;
+        }
+
+        /* ===== LOGIN PAGE ===== */
+        .login-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, #f0f2f8 0%, #dce0ec 100%);
+            padding: 20px;
+        }
+        .login-card {
+            background: var(--white);
+            border-radius: 28px;
+            padding: 48px 40px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 25px 80px rgba(10, 36, 99, 0.18);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--pcea-blue), var(--pcea-gold), var(--pcea-red));
+        }
+        .login-card .logo-icon {
+            font-size: 3.6rem;
+            margin-bottom: 4px;
+            display: block;
+        }
+        .login-card .logo-text {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--pcea-blue);
+            letter-spacing: -0.5px;
+        }
+        .login-card .logo-text span {
+            color: var(--pcea-gold);
+        }
+        .login-card .sub {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            margin: 4px 0 28px 0;
+            line-height: 1.5;
+        }
+        .login-card .sub strong {
+            color: var(--text);
+        }
+        .login-card input {
+            width: 100%;
+            padding: 16px 18px;
+            margin-bottom: 14px;
+            border: 2px solid #e8ecf0;
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            background: #fafbfc;
+            transition: border var(--transition), box-shadow var(--transition);
+            font-family: var(--font);
+        }
+        .login-card input:focus {
+            border-color: var(--pcea-blue);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(10, 36, 99, 0.10);
+            background: var(--white);
+        }
+        .login-card input::placeholder {
+            color: var(--text-muted);
+        }
+        .login-card .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: var(--pcea-blue);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--white);
+            cursor: pointer;
+            transition: background var(--transition), transform var(--transition);
+            font-family: var(--font);
+            letter-spacing: 0.3px;
+        }
+        .login-card .btn-primary:hover {
+            background: var(--pcea-blue-light);
+            transform: translateY(-2px);
+        }
+        .login-card .btn-primary:active {
+            transform: scale(0.98);
+        }
+        .login-card .footer-text {
+            margin-top: 24px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            border-top: 1px solid #f0f2f5;
+            padding-top: 20px;
+        }
+        #loginMessage {
+            color: var(--pcea-red);
+            margin-bottom: 14px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            min-height: 24px;
+        }
+
+        /* ===== TOP BAR ===== */
+        .top-bar {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 14px 22px;
+            margin-bottom: 18px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(10, 36, 99, 0.04);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        .top-bar .brand {
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text);
+            cursor: pointer;
+            transition: opacity var(--transition);
+            user-select: none;
+        }
+        .top-bar .brand:hover {
+            opacity: 0.8;
+        }
+        .top-bar .brand .logo-emblem {
+            font-size: 1.6rem;
+        }
+        .top-bar .brand .brand-name {
+            letter-spacing: -0.3px;
+        }
+        .top-bar .brand .brand-name span {
+            color: var(--pcea-gold);
+        }
+        .top-bar .brand .badge {
+            background: var(--pcea-red);
+            color: var(--white);
+            padding: 2px 10px;
+            border-radius: 40px;
+            font-size: 0.55rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .top-bar .user-greeting {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+        .top-bar .user-greeting strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        /* ===== NAVIGATION ===== */
+        .nav-scroll {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 4px 0 16px 0;
+            margin-bottom: 4px;
+            border-bottom: 1px solid #f0f2f5;
+        }
+        .nav-scroll a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            background: transparent;
+            border-radius: 40px;
+            text-decoration: none;
+            color: var(--text-light);
+            font-weight: 500;
+            font-size: 0.88rem;
+            transition: all var(--transition);
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+        .nav-scroll a:hover {
+            background: #eef0f7;
+            color: var(--pcea-blue);
+        }
+        .nav-scroll a.active {
+            background: var(--pcea-blue);
+            color: var(--white);
+            box-shadow: 0 4px 12px rgba(10, 36, 99, 0.25);
+        }
+        .nav-scroll a.active:hover {
+            background: var(--pcea-blue-light);
+        }
+        .nav-scroll a.logout-btn {
+            color: var(--pcea-red);
+            margin-left: auto;
+        }
+        .nav-scroll a.logout-btn:hover {
+            background: var(--pcea-red-light);
+            border-color: #fecaca;
+        }
+        .nav-scroll a .nav-icon {
+            font-size: 1.1rem;
+        }
+
+        /* ===== STATS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--white);
+            padding: 22px 20px;
+            border-radius: var(--radius);
+            text-align: left;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(10, 36, 99, 0.04);
+            transition: transform var(--transition), box-shadow var(--transition);
+            border-left: 4px solid var(--pcea-gold);
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+        }
+        .stat-card .stat-icon {
+            font-size: 1.8rem;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .stat-card .number {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--text);
+            display: block;
+            line-height: 1.2;
+            letter-spacing: -0.5px;
+        }
+        .stat-card .number.blue {
+            color: var(--pcea-blue);
+        }
+        .stat-card .number.gold {
+            color: var(--pcea-gold);
+        }
+        .stat-card .label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        /* ===== ANNOUNCEMENTS ===== */
+        .announcement-item {
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--pcea-gold);
+            transition: background var(--transition);
+        }
+        .announcement-item:hover {
+            background: #eef0f7;
+        }
+        .announcement-item .title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--text);
+        }
+        .announcement-item .content {
+            color: var(--text-light);
+            margin-top: 4px;
+            font-size: 0.95rem;
+        }
+        .announcement-item .meta {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .announcement-item .meta .tag {
+            background: var(--white);
+            padding: 2px 10px;
+            border-radius: 40px;
+            font-weight: 500;
+        }
+        .priority-high {
+            border-left-color: var(--pcea-red);
+            background: var(--pcea-red-light);
+        }
+        .priority-high:hover {
+            background: #fdd8d8;
+        }
+        .priority-high .title::after {
+            content: " 🔥";
+        }
+
+        /* ===== FORMS ===== */
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            color: var(--text);
+            letter-spacing: 0.2px;
+        }
+        .form-group label .required {
+            color: var(--pcea-red);
+        }
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e8ecf0;
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            background: #fafbfc;
+            transition: border var(--transition), box-shadow var(--transition);
+            font-family: var(--font);
+            color: var(--text);
+        }
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--pcea-blue);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(10, 36, 99, 0.08);
+            background: var(--white);
+        }
+        input::placeholder,
+        textarea::placeholder {
+            color: var(--text-muted);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 32px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            text-align: center;
+            font-family: var(--font);
+            letter-spacing: 0.2px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn:active {
+            transform: scale(0.97);
+        }
+        .btn-primary {
+            background: var(--pcea-blue);
+            color: var(--white);
+        }
+        .btn-primary:hover {
+            background: var(--pcea-blue-light);
+            box-shadow: 0 8px 24px rgba(10, 36, 99, 0.25);
+        }
+        .btn-gold {
+            background: var(--pcea-gold);
+            color: var(--white);
+        }
+        .btn-gold:hover {
+            background: #b8943a;
+            box-shadow: 0 8px 24px rgba(201, 168, 76, 0.30);
+        }
+        .btn-outline {
+            background: transparent;
+            color: var(--pcea-blue);
+            border: 2px solid var(--pcea-blue);
+        }
+        .btn-outline:hover {
+            background: var(--pcea-blue);
+            color: var(--white);
+        }
+        .btn-danger {
+            background: var(--pcea-red);
+            color: var(--white);
+        }
+        .btn-danger:hover {
+            background: #b71c1c;
+            box-shadow: 0 8px 24px rgba(211, 47, 47, 0.25);
+        }
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.82rem;
+        }
+        .btn-block {
+            width: 100%;
+            justify-content: center;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* ===== ATTENDANCE GRID ===== */
+        .attendance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin: 16px 0;
+        }
+        .attendance-btn {
+            padding: 16px 8px;
+            border-radius: var(--radius-sm);
+            border: 2px solid #e8ecf0;
+            background: var(--white);
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            touch-action: manipulation;
+            min-height: 72px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            word-break: break-word;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+        .attendance-btn .status {
+            font-size: 1.3rem;
+            margin-top: 4px;
+        }
+        .attendance-btn.present {
+            background: #d1fae5;
+            border-color: #10b981;
+        }
+        .attendance-btn.present:hover {
+            background: #a7f3d0;
+        }
+        .attendance-btn.absent {
+            background: var(--pcea-red-light);
+            border-color: var(--pcea-red);
+        }
+        .attendance-btn.absent:hover {
+            background: #fdd8d8;
+        }
+        .attendance-btn:active {
+            transform: scale(0.94);
+        }
+
+        /* ===== TABLES ===== */
+        .table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 12px 0;
+            border-radius: var(--radius-sm);
+            border: 1px solid #f0f2f5;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            min-width: 580px;
+        }
+        th {
+            background: var(--pcea-blue);
+            color: var(--white);
+            padding: 14px 14px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        td {
+            padding: 14px 14px;
+            border-bottom: 1px solid #f0f2f5;
+            vertical-align: middle;
+        }
+        tr:hover td {
+            background: #fafbfc;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 40px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .badge-danger {
+            background: var(--pcea-red-light);
+            color: var(--pcea-red);
+        }
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* ===== MESSAGES ===== */
+        .message {
+            padding: 14px 18px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            display: none;
+        }
+        .message.success {
+            display: block;
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .message.error {
+            display: block;
+            background: var(--pcea-red-light);
+            color: var(--pcea-red);
+            border: 1px solid #fecaca;
+        }
+
+        /* ===== DIVIDERS ===== */
+        hr {
+            border: none;
+            border-top: 2px solid #f0f2f5;
+            margin: 24px 0;
+        }
+
+        /* ===== SECTION TITLES ===== */
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 14px;
+            color: var(--text);
+            letter-spacing: -0.3px;
+        }
+        .section-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 16px;
+        }
+
+        /* ===== PLACEHOLDER IMAGE STYLES ===== */
+        .placeholder-img {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, #eef0f7, #dce0ec);
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 2px dashed #c8ccd8;
+            min-height: 120px;
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+            transition: border-color var(--transition);
+        }
+        .placeholder-img:hover {
+            border-color: var(--pcea-blue);
+        }
+        .placeholder-img img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-sm);
+            display: block;
+        }
+        .placeholder-img .upload-hint {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .placeholder-img .upload-hint .icon {
+            font-size: 2.5rem;
+        }
+        .placeholder-img .upload-hint small {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            #app {
+                padding: 12px;
+            }
+            .card {
+                padding: 18px 16px;
+                border-radius: var(--radius-sm);
+            }
+            .card-header {
+                font-size: 1.1rem;
+            }
+            .top-bar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 6px;
+                padding: 14px 16px;
+                position: relative;
+            }
+            .top-bar .brand {
+                font-size: 1rem;
+                justify-content: center;
+            }
+            .top-bar .user-greeting {
+                text-align: center;
+                font-size: 0.8rem;
+            }
+            .nav-scroll {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                padding: 4px 0 12px 0;
+                gap: 4px;
+                scrollbar-width: none;
+            }
+            .nav-scroll::-webkit-scrollbar {
+                display: none;
+            }
+            .nav-scroll a {
+                padding: 8px 14px;
+                font-size: 0.78rem;
+                flex-shrink: 0;
+            }
+            .nav-scroll a .nav-icon {
+                font-size: 0.95rem;
+            }
+            .nav-scroll a.logout-btn {
+                margin-left: 0;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .stat-card {
+                padding: 16px 14px;
+            }
+            .stat-card .number {
+                font-size: 1.6rem;
+            }
+            .stat-card .stat-icon {
+                font-size: 1.4rem;
+            }
+            .login-card {
+                padding: 32px 24px;
+            }
+            .login-card .logo-text {
+                font-size: 1.3rem;
+            }
+            .attendance-grid {
+                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+                gap: 8px;
+            }
+            .attendance-btn {
+                min-height: 60px;
+                font-size: 0.75rem;
+                padding: 10px 4px;
+            }
+            .attendance-btn .status {
+                font-size: 1rem;
+            }
+            table {
+                font-size: 0.78rem;
+                min-width: 420px;
+            }
+            th,
+            td {
+                padding: 10px 10px;
+            }
+            .btn {
+                padding: 12px 24px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #app {
+                padding: 8px;
+            }
+            .card {
+                padding: 14px 12px;
+                border-radius: 12px;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .stat-card {
+                padding: 14px 12px;
+            }
+            .stat-card .number {
+                font-size: 1.4rem;
+            }
+            .stat-card .label {
+                font-size: 0.75rem;
+            }
+            .login-card {
+                padding: 24px 18px;
+                border-radius: 20px;
+            }
+            .login-card .logo-icon {
+                font-size: 2.8rem;
+            }
+            .top-bar .brand .badge {
+                display: none;
+            }
+            .nav-scroll a {
+                padding: 6px 12px;
+                font-size: 0.72rem;
+            }
+            .attendance-grid {
+                grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+                gap: 6px;
+            }
+            .attendance-btn {
+                min-height: 52px;
+                font-size: 0.7rem;
+                padding: 8px 4px;
+            }
+            .placeholder-img {
+                min-height: 80px;
+                font-size: 0.75rem;
+                padding: 12px;
+            }
+            .placeholder-img .upload-hint .icon {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* ===== KEYFRAME ANIMATIONS ===== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .page:not(.hidden) {
+            animation: fadeInUp 0.35s ease forwards;
+        }
+
+        /* ===== PRINT STYLES ===== */
+        @media print {
+            .top-bar,
+            .nav-scroll,
+            .btn {
+                display: none !important;
+            }
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #ddd;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div id="app"></div>
-  <script src="app.js"></script>
+    <div id="app">
+        <!-- ========================================================= -->
+        <!-- LOGIN PAGE -->
+        <!-- ========================================================= -->
+        <div id="login" class="page">
+            <div class="login-wrapper">
+                <div class="login-card">
+                    <span class="logo-icon">⛪</span>
+                    <div class="logo-text">PCEA <span>Ministry</span></div>
+                    <div class="sub"><strong>Kasarani West Parish</strong><br>Children Ministry · Brigade &amp; Church School</div>
+                    <form onsubmit="handleLogin(event)">
+                        <input type="email" id="loginEmail" placeholder="Email address" required />
+                        <input type="password" id="loginPassword" placeholder="Password" required />
+                        <div id="loginMessage"></div>
+                        <button type="submit" class="btn-primary">Sign In</button>
+                    </form>
+                    <div class="footer-text">© 2026 PCEA Kasarani West · Children Ministry</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- DASHBOARD -->
+        <!-- ========================================================= -->
+        <div id="dashboard" class="page hidden">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="brand" onclick="navigateTo('dashboard')">
+                    <span class="logo-emblem">⛪</span>
+                    <span class="brand-name">PCEA <span>Ministry</span></span>
+                    <span class="badge">v2</span>
+                </div>
+                <div class="user-greeting">👋 Welcome, <strong id="userNameDisplay">User</strong></div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="nav-scroll">
+                <a href="#" data-page="dashboard" class="active" onclick="navigateTo('dashboard')"><span class="nav-icon">📊</span> Dashboard</a>
+                <a href="#" data-page="enrol-brigade" onclick="navigateTo('enrol-brigade')"><span class="nav-icon">🎖️</span> Enrol Brigade</a>
+                <a href="#" data-page="enrol-churchschool" onclick="navigateTo('enrol-churchschool')"><span class="nav-icon">📚</span> Enrol CS</a>
+                <a href="#" data-page="attendance" onclick="navigateTo('attendance')"><span class="nav-icon">✅</span> Attendance</a>
+                <a href="#" data-page="admin" onclick="navigateTo('admin')" class="admin-only"><span class="nav-icon">⚙️</span> Admin</a>
+                <a href="#" data-page="config" onclick="navigateTo('config')" class="admin-only"><span class="nav-icon">🔧</span> Config</a>
+                <a href="#" class="logout-btn" onclick="currentUser=null; showPage('login')"><span class="nav-icon">🚪</span> Logout</a>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-icon">🎖️</span>
+                    <span class="number blue" id="brigadeCount">0</span>
+                    <span class="label">Brigade Learners</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">📚</span>
+                    <span class="number gold" id="csCount">0</span>
+                    <span class="label">Church School Learners</span>
+                </div>
+            </div>
+
+            <!-- Announcements -->
+            <div class="card">
+                <div class="card-header"><span class="icon">📢</span> Announcements</div>
+                <div id="announcementsList"></div>
+            </div>
+
+            <!-- ===== PLACEHOLDER: CHURCH IMAGE ===== -->
+            <div class="card">
+                <div class="card-header"><span class="icon">🏛️</span> Our Church</div>
+                <div class="placeholder-img" id="churchImagePlaceholder">
+                    <div class="upload-hint">
+                        <span class="icon">🖼️</span>
+                        <span>Upload Church Image</span>
+                        <small>Replace this placeholder with your church photo</small>
+                    </div>
+                </div>
+                <p style="margin-top:12px; font-size:0.85rem; color:var(--text-muted);">
+                    <em>Tip: Right-click the placeholder above and select "Inspect", then replace the &lt;div&gt; with an &lt;img&gt; tag pointing to your image URL.</em>
+                </p>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- ENROL BRIGADE -->
+        <!-- ========================================================= -->
+        <div id="enrol-brigade" class="page hidden">
+            <div class="card">
+                <div class="card-header"><span class="icon">🎖️</span> Enrol Brigade Learner</div>
+                <div id="brigadeMessage"></div>
+                <form onsubmit="enrolBrigade(event)">
+                    <div class="form-group"><label>Full Name <span class="required">*</span></label><input type="text" id="bName" required /></div>
+                    <div class="form-group"><label>Phone</label><input type="tel" id="bPhone" /></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="bEmail" /></div>
+                    <div class="form-group"><label>Congregation <span class="required">*</span></label>
+                        <select id="bCongregation" required><option>Kasarani</option><option>Joyvalley</option></select>
+                    </div>
+                    <div class="form-group"><label>Badge</label>
+                        <select id="bBadge"><option value="">Select Badge</option><option>Anchor</option><option>Compass</option><option>Pathfinder</option><option>Pioneer</option><option>Ranger</option><option>Explorer</option></select>
+                    </div>
+                    <div class="form-group"><label>Age</label><input type="number" id="bAge" /></div>
+                    <div class="form-group"><label>Gender</label>
+                        <select id="bGender"><option value="">Select</option><option>Male</option><option>Female</option></select>
+                    </div>
+                    <hr />
+                    <div class="section-subtitle">Parent / Guardian Details</div>
+                    <div class="form-group"><label>Parent Name</label><input type="text" id="bParentName" /></div>
+                    <div class="form-group"><label>Parent Phone</label><input type="tel" id="bParentPhone" /></div>
+                    <div class="form-group"><label>Parent Email</label><input type="email" id="bParentEmail" /></div>
+                    <div class="form-group"><label>Address</label><input type="text" id="bAddress" /></div>
+                    <div class="form-group"><label>Medical Info</label><input type="text" id="bMedical" placeholder="Allergies, conditions..." /></div>
+                    <div class="form-group"><label>Emergency Contact</label><input type="text" id="bEmergency" /></div>
+                    <button type="submit" class="btn btn-gold btn-block">🎯 Enrol Brigade</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- ENROL CHURCH SCHOOL -->
+        <!-- ========================================================= -->
+        <div id="enrol-churchschool" class="page hidden">
+            <div class="card">
+                <div class="card-header"><span class="icon">📚</span> Enrol Church School Learner</div>
+                <div id="csMessage"></div>
+                <form onsubmit="enrolCS(event)">
+                    <div class="form-group"><label>Full Name <span class="required">*</span></label><input type="text" id="csName" required /></div>
+                    <div class="form-group"><label>Phone</label><input type="tel" id="csPhone" /></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="csEmail" /></div>
+                    <div class="form-group"><label>Congregation <span class="required">*</span></label>
+                        <select id="csCongregation" required><option>Kasarani</option><option>Joyvalley</option></select>
+                    </div>
+                    <div class="form-group"><label>Class</label>
+                        <select id="csClass"><option value="">Select Class</option><option>Pre-Primary</option><option>Lower Primary</option><option>Upper Primary</option><option>Junior High</option></select>
+                    </div>
+                    <div class="form-group"><label>Age</label><input type="number" id="csAge" /></div>
+                    <div class="form-group"><label>Gender</label>
+                        <select id="csGender"><option value="">Select</option><option>Male</option><option>Female</option></select>
+                    </div>
+                    <hr />
+                    <div class="section-subtitle">Parent / Guardian Details</div>
+                    <div class="form-group"><label>Parent Name</label><input type="text" id="csParentName" /></div>
+                    <div class="form-group"><label>Parent Phone</label><input type="tel" id="csParentPhone" /></div>
+                    <div class="form-group"><label>Parent Email</label><input type="email" id="csParentEmail" /></div>
+                    <div class="form-group"><label>Address</label><input type="text" id="csAddress" /></div>
+                    <div class="form-group"><label>Medical Info</label><input type="text" id="csMedical" placeholder="Allergies, conditions..." /></div>
+                    <button type="submit" class="btn btn-gold btn-block">📖 Enrol Church School</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- ATTENDANCE -->
+        <!-- ========================================================= -->
+        <div id="attendance" class="page hidden">
+            <div class="card">
+                <div class="card-header"><span class="icon">✅</span> Take Attendance</div>
+                <div id="attMessage"></div>
+                <div class="form-group"><label>Department</label>
+                    <select id="attDept" onchange="loadAttendanceLearners()"><option value="brigade">Brigade</option><option value="church-school">Church School</option></select>
+                </div>
+                <div class="form-group"><label>Congregation</label>
+                    <select id="attCong" onchange="loadAttendanceLearners()"><option>Kasarani</option><option>Joyvalley</option></select>
+                </div>
+                <div class="form-group"><label>Class / Badge (optional)</label><input type="text" id="attClass" placeholder="e.g. Anchor, Pre-Primary" /></div>
+                <div class="form-group"><label>Date <span class="required">*</span></label><input type="date" id="attDate" /></div>
+                <div class="flex-between mb-16">
+                    <span class="text-sm text-muted">Tap to mark present / absent</span>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="markAllPresent()">✅ Mark All Present</button>
+                </div>
+                <div id="attendanceGrid" class="attendance-grid"></div>
+                <button class="btn btn-primary btn-block mt-16" onclick="saveAttendance()">💾 Save Attendance</button>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- ADMIN -->
+        <!-- ========================================================= -->
+        <div id="admin" class="page hidden">
+            <div class="card">
+                <div class="card-header"><span class="icon">👤</span> Admin Panel</div>
+                <div id="adminMessage"></div>
+
+                <div class="section-title">👥 Users</div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Cong</th><th>Dept</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody id="userTableBody"></tbody>
+                    </table>
+                </div>
+
+                <hr />
+                <div class="section-title">➕ Create User</div>
+                <form onsubmit="createUser(event)">
+                    <div class="form-group"><label>Name <span class="required">*</span></label><input type="text" id="newName" required /></div>
+                    <div class="form-group"><label>Email <span class="required">*</span></label><input type="email" id="newEmail" required /></div>
+                    <div class="form-group"><label>Password <span class="required">*</span></label><input type="password" id="newPassword" required /></div>
+                    <div class="form-group"><label>Role</label>
+                        <select id="newRole"><option value="teacher">Teacher</option><option value="officer">Officer</option><option value="admin">Admin</option></select>
+                    </div>
+                    <div class="form-group"><label>Congregation</label>
+                        <select id="newCong"><option value="">None</option><option>Kasarani</option><option>Joyvalley</option></select>
+                    </div>
+                    <div class="form-group"><label>Department</label>
+                        <select id="newDept"><option value="">None</option><option>Brigade</option><option>Church School</option><option>Both</option></select>
+                    </div>
+                    <div class="form-group"><label>Classes</label><input type="text" id="newClasses" placeholder="Comma separated: Pre-Primary, Lower Primary" /></div>
+                    <div class="form-group"><label>Badges</label><input type="text" id="newBadges" placeholder="Comma separated: Anchor, Compass" /></div>
+                    <button type="submit" class="btn btn-primary btn-block">👤 Create User</button>
+                </form>
+
+                <hr />
+                <div class="section-title">📢 Post Announcement</div>
+                <form onsubmit="postAnnouncement(event)">
+                    <div class="form-group"><label>Title <span class="required">*</span></label><input type="text" id="annTitle" required /></div>
+                    <div class="form-group"><label>Content <span class="required">*</span></label><textarea id="annContent" required></textarea></div>
+                    <div class="form-group"><label>Congregation</label>
+                        <select id="annCong"><option value="All">All Congregations</option><option>Kasarani</option><option>Joyvalley</option></select>
+                    </div>
+                    <div class="form-group"><label>Department</label>
+                        <select id="annDept"><option value="All">All Departments</option><option>Brigade</option><option>Church School</option></select>
+                    </div>
+                    <div class="form-group"><label>Priority</label>
+                        <select id="annPriority"><option value="Normal">Normal</option><option>Medium</option><option>High</option></select>
+                    </div>
+                    <button type="submit" class="btn btn-gold btn-block">📢 Post Announcement</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- CONFIG -->
+        <!-- ========================================================= -->
+        <div id="config" class="page hidden">
+            <div class="card">
+                <div class="card-header"><span class="icon">🔧</span> Configuration</div>
+                <div id="configMessage"></div>
+                <div class="section-subtitle">Manage Google Form links for enrolment and attendance</div>
+                <form onsubmit="saveConfig(event)">
+                    <div class="form-group"><label>Brigade Enrolment Form URL</label><input type="url" id="cfgBrigadeForm" placeholder="https://docs.google.com/forms/..." /></div>
+                    <div class="form-group"><label>Church School Enrolment Form URL</label><input type="url" id="cfgCSForm" placeholder="https://docs.google.com/forms/..." /></div>
+                    <div class="form-group"><label>Brigade Attendance Form URL</label><input type="url" id="cfgBrigadeAtt" placeholder="https://docs.google.com/forms/..." /></div>
+                    <div class="form-group"><label>Church School Attendance Form URL</label><input type="url" id="cfgCSAtt" placeholder="https://docs.google.com/forms/..." /></div>
+                    <div class="form-group"><label>Announcements Form URL</label><input type="url" id="cfgAnnForm" placeholder="https://docs.google.com/forms/..." /></div>
+                    <button type="submit" class="btn btn-primary btn-block">💾 Save Configuration</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- JAVASCRIPT – COMPLETE APP LOGIC -->
+    <!-- ========================================================= -->
+    <script>
+        // =============================================================
+        // CONFIGURATION – CHANGE THIS TO YOUR GOOGLE APPS SCRIPT URL
+        // =============================================================
+        const API_BASE = 'https://script.google.com/macros/s/AKfycbyFBi5X18gxETVCU_9p6i8Vksa1lstqq_3T_iG0SjOBaDwXmvBuFcqK4Rcq_6XHEeJe/exec';
+
+        // =============================================================
+        // STATE
+        // =============================================================
+        let currentUser = null;
+        let learners = [];
+
+        // =============================================================
+        // API HELPER
+        // =============================================================
+        function apiCall(method, params) {
+            const url = API_BASE + '?method=' + method + '&data=' + encodeURIComponent(JSON.stringify(params));
+            return fetch(url).then(function(r) { return r.json(); });
+        }
+
+        // =============================================================
+        // PAGE NAVIGATION
+        // =============================================================
+        function showPage(pageId) {
+            var pages = document.querySelectorAll('.page');
+            for (var i = 0; i < pages.length; i++) {
+                pages[i].classList.add('hidden');
+            }
+            var page = document.getElementById(pageId);
+            if (page) page.classList.remove('hidden');
+
+            var links = document.querySelectorAll('.nav-scroll a');
+            for (var j = 0; j < links.length; j++) {
+                links[j].classList.remove('active');
+            }
+            var navLink = document.querySelector('.nav-scroll a[data-page="' + pageId + '"]');
+            if (navLink) navLink.classList.add('active');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function navigateTo(page) {
+            if (!currentUser && page !== 'login') {
+                showPage('login');
+                return;
+            }
+            showPage(page);
+            if (page === 'dashboard') loadDashboard();
+            if (page === 'attendance') loadAttendanceLearners();
+            if (page === 'admin') loadUsers();
+            if (page === 'config') loadConfig();
+        }
+
+        // =============================================================
+        // MESSAGE HELPER
+        // =============================================================
+        function showMessage(elementId, text, isError) {
+            var el = document.getElementById(elementId);
+            if (!el) return;
+            el.textContent = text || '';
+            el.className = 'message ' + (isError ? 'error' : 'success');
+            el.style.display = text ? 'block' : 'none';
+        }
+
+        // =============================================================
+        // LOGIN
+        // =============================================================
+        function handleLogin(e) {
+            e.preventDefault();
+            var email = document.getElementById('loginEmail').value;
+            var password = document.getElementById('loginPassword').value;
+            apiCall('login', { email: email, password: password })
+                .then(function(result) {
+                    if (result.success) {
+                        currentUser = result;
+                        document.getElementById('userNameDisplay').textContent = result.name || 'User';
+                        updateNavForRole();
+                        showPage('dashboard');
+                        loadDashboard();
+                    } else {
+                        showMessage('loginMessage', result.error || 'Invalid credentials', true);
+                    }
+                })
+                .catch(function(err) {
+                    showMessage('loginMessage', 'Network error. Please try again.', true);
+                });
+        }
+
+        // =============================================================
+        // DASHBOARD
+        // =============================================================
+        function loadDashboard() {
+            apiCall('getAnnouncements', {})
+                .then(function(ann) {
+                    var container = document.getElementById('announcementsList');
+                    if (!ann || ann.length === 0) {
+                        container.innerHTML = '<p class="text-muted text-sm">No announcements yet.</p>';
+                    } else {
+                        var html = '';
+                        for (var i = 0; i < ann.length; i++) {
+                            var a = ann[i];
+                            var priorityClass = a.priority === 'High' ? 'priority-high' : '';
+                            html += '<div class="announcement-item ' + priorityClass + '">';
+                            html += '<div class="title">' + (a.title || '') + '</div>';
+                            html += '<div class="content">' + (a.content || '') + '</div>';
+                            html += '<div class="meta">';
+                            html += '<span class="tag">📍 ' + (a.congregation || 'All') + '</span>';
+                            html += '<span class="tag">📋 ' + (a.department || 'All') + '</span>';
+                            html += '<span class="tag">🏷️ ' + (a.priority || 'Normal') + '</span>';
+                            html += '</div></div>';
+                        }
+                        container.innerHTML = html;
+                    }
+                })
+                .catch(function(e) { console.error(e); });
+
+            apiCall('getLearners', { department: 'brigade' })
+                .then(function(data) {
+                    document.getElementById('brigadeCount').textContent = (data && data.length) || 0;
+                })
+                .catch(function(e) { console.error(e); });
+
+            apiCall('getLearners', { department: 'church-school' })
+                .then(function(data) {
+                    document.getElementById('csCount').textContent = (data && data.length) || 0;
+                })
+                .catch(function(e) { console.error(e); });
+        }
+
+        // =============================================================
+        // ENROL BRIGADE
+        // =============================================================
+        function enrolBrigade(e) {
+            e.preventDefault();
+            var data = {
+                name: document.getElementById('bName').value,
+                phone: document.getElementById('bPhone').value,
+                email: document.getElementById('bEmail').value,
+                congregation: document.getElementById('bCongregation').value,
+                badge: document.getElementById('bBadge').value,
+                age: document.getElementById('bAge').value,
+                gender: document.getElementById('bGender').value,
+                parentName: document.getElementById('bParentName').value,
+                parentPhone: document.getElementById('bParentPhone').value,
+                parentEmail: document.getElementById('bParentEmail').value,
+                address: document.getElementById('bAddress').value,
+                medicalInfo: document.getElementById('bMedical').value,
+                emergencyContact: document.getElementById('bEmergency').value,
+            };
+            apiCall('enrolBrigade', data)
+                .then(function(result) {
+                    showMessage('brigadeMessage', result.message || '✅ Enrolled successfully!', false);
+                    if (!result.error) e.target.reset();
+                })
+                .catch(function(err) {
+                    showMessage('brigadeMessage', 'Network error. Please try again.', true);
+                });
+        }
+
+        // =============================================================
+        // ENROL CHURCH SCHOOL
+        // =============================================================
+        function enrolCS(e) {
+            e.preventDefault();
+            var data = {
+                name: document.getElementById('csName').value,
+                phone: document.getElementById('csPhone').value,
+                email: document.getElementById('csEmail').value,
+                congregation: document.getElementById('csCongregation').value,
+                className: document.getElementById('csClass').value,
+                age: document.getElementById('csAge').value,
+                gender: document.getElementById('csGender').value,
+                parentName: document.getElementById('csParentName').value,
+                parentPhone: document.getElementById('csParentPhone').value,
+                parentEmail: document.getElementById('csParentEmail').value,
+                address: document.getElementById('csAddress').value,
+                medicalInfo: document.getElementById('csMedical').value,
+            };
+            apiCall('enrolChurchSchool', data)
+                .then(function(result) {
+                    showMessage('csMessage', result.message || '✅ Enrolled successfully!', false);
+                    if (!result.error) e.target.reset();
+                })
+                .catch(function(err) {
+                    showMessage('csMessage', 'Network error. Please try again.', true);
+                });
+        }
+
+        // =============================================================
+        // ATTENDANCE
+        // =============================================================
+        function loadAttendanceLearners() {
+            var dept = document.getElementById('attDept').value;
+            var cong = document.getElementById('attCong').value;
+            apiCall('getLearners', { department: dept, congregation: cong })
+                .then(function(data) {
+                    learners = data || [];
+                    var container = document.getElementById('attendanceGrid');
+                    if (!learners || learners.length === 0) {
+                        container.innerHTML = '<p class="text-muted text-sm" style="grid-column:1/-1; text-align:center; padding:20px 0;">No learners found for this selection.</p>';
+                        return;
+                    }
+                    var html = '';
+                    for (var i = 0; i < learners.length; i++) {
+                        var name = learners[i].Name || learners[i].name || 'Unknown';
+                        html += '<div class="attendance-btn present" data-index="' + i + '" onclick="toggleAttendance(' + i +
+                            ')">' +
+                            name +
+                            '<span class="status">✓</span></div>';
+                    }
+                    container.innerHTML = html;
+                    window.attendanceState = learners.map(function() { return true; });
+                    showMessage('attMessage', '', false);
+                })
+                .catch(function(err) {
+                    showMessage('attMessage', 'Failed to load learners.', true);
+                });
+        }
+
+        function toggleAttendance(idx) {
+            var state = window.attendanceState;
+            state[idx] = !state[idx];
+            var btn = document.querySelector('.attendance-btn[data-index="' + idx + '"]');
+            if (btn) {
+                btn.className = 'attendance-btn ' + (state[idx] ? 'present' : 'absent');
+                btn.querySelector('.status').textContent = state[idx] ? '✓' : '✗';
+            }
+        }
+
+        function markAllPresent() {
+            if (!learners || learners.length === 0) return;
+            var state = window.attendanceState;
+            for (var i = 0; i < learners.length; i++) {
+                state[i] = true;
+            }
+            var btns = document.querySelectorAll('.attendance-btn');
+            for (var j = 0; j < btns.length; j++) {
+                btns[j].className = 'attendance-btn present';
+                btns[j].querySelector('.status').textContent = '✓';
+            }
+        }
+
+        function saveAttendance() {
+            var dept = document.getElementById('attDept').value;
+            var cong = document.getElementById('attCong').value;
+            var cls = document.getElementById('attClass').value;
+            var date = document.getElementById('attDate').value;
+            if (!date) {
+                showMessage('attMessage', 'Please select a date.', true);
+                return;
+            }
+            if (!learners || learners.length === 0) {
+                showMessage('attMessage', 'No learners to mark.', true);
+                return;
+            }
+            var learnersList = [];
+            for (var i = 0; i < learners.length; i++) {
+                learnersList.push({
+                    name: learners[i].Name || learners[i].name || 'Unknown',
+                    present: window.attendanceState[i]
+                });
+            }
+            var data = {
+                department: dept,
+                congregation: cong,
+                className: cls,
+                date: date,
+                learners: learnersList,
+                recordedBy: currentUser ? currentUser.name || 'app' : 'app'
+            };
+            apiCall('saveAttendance', data)
+                .then(function(result) {
+                    showMessage('attMessage', result.message || '✅ Attendance saved!', false);
+                })
+                .catch(function(err) {
+                    showMessage('attMessage', 'Failed to save attendance.', true);
+                });
+        }
+
+        // =============================================================
+        // ADMIN
+        // =============================================================
+        function loadUsers() {
+            apiCall('adminUsers', {})
+                .then(function(users) {
+                    var tbody = document.getElementById('userTableBody');
+                    if (!users || users.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" class="text-muted text-sm" style="text-align:center; padding:20px;">No users found</td></tr>';
+                        return;
+                    }
+                    var html = '';
+                    for (var i = 0; i < users.length; i++) {
+                        var u = users[i];
+                        var statusClass = u.active === 'false' ? 'badge-danger' : 'badge-success';
+                        var statusText = u.active === 'false' ? 'Inactive' : 'Active';
+                        html += '<tr>';
+                        html += '<td><strong>' + (u.name || '') + '</strong></td>';
+                        html += '<td>' + (u.email || '') + '</td>';
+                        html += '<td><span class="badge badge-info">' + (u.role || 'teacher') + '</span></td>';
+                        html += '<td>' + (u.congregation || '-') + '</td>';
+                        html += '<td>' + (u.department || '-') + '</td>';
+                        html += '<td><span class="badge ' + statusClass + '">' + statusText + '</span></td>';
+                        html += '<td><button class="btn btn-danger btn-sm" onclick="deactivateUser(' + i + ')">Deactivate</button></td>';
+                        html += '</tr>';
+                    }
+                    tbody.innerHTML = html;
+                })
+                .catch(function(e) { console.error(e); });
+        }
+
+        function createUser(e) {
+            e.preventDefault();
+            var data = {
+                name: document.getElementById('newName').value,
+                email: document.getElementById('newEmail').value,
+                password: document.getElementById('newPassword').value,
+                role: document.getElementById('newRole').value,
+                congregation: document.getElementById('newCong').value,
+                department: document.getElementById('newDept').value,
+                classes: document.getElementById('newClasses').value,
+                badges: document.getElementById('newBadges').value,
+            };
+            apiCall('createUser', data)
+                .then(function(result) {
+                    showMessage('adminMessage', result.message || '✅ User created!', false);
+                    if (!result.error) {
+                        loadUsers();
+                        e.target.reset();
+                    }
+                })
+                .catch(function(err) {
+                    showMessage('adminMessage', 'Failed to create user.', true);
+                });
+        }
+
+        function deactivateUser(rowIndex) {
+            if (!confirm('Deactivate this user?')) return;
+            alert('Deactivation: You can manually set active=false in the users sheet.');
+        }
+
+        function postAnnouncement(e) {
+            e.preventDefault();
+            var data = {
+                title: document.getElementById('annTitle').value,
+                content: document.getElementById('annContent').value,
+                congregation: document.getElementById('annCong').value || 'All',
+                department: document.getElementById('annDept').value || 'All',
+                priority: document.getElementById('annPriority').value || 'Normal',
+            };
+            apiCall('postAnnouncement', data)
+                .then(function(result) {
+                    showMessage('adminMessage', result.message || '✅ Announcement posted!', false);
+                    if (!result.error) {
+                        e.target.reset();
+                        loadDashboard();
+                    }
+                })
+                .catch(function(err) {
+                    showMessage('adminMessage', 'Failed to post announcement.', true);
+                });
+        }
+
+        // =============================================================
+        // CONFIG
+        // =============================================================
+        function loadConfig() {
+            apiCall('getConfig', {})
+                .then(function(config) {
+                    document.getElementById('cfgBrigadeForm').value = config.brigade_form_url || '';
+                    document.getElementById('cfgCSForm').value = config.cs_form_url || '';
+                    document.getElementById('cfgBrigadeAtt').value = config.brigade_attendance_form_url || '';
+                    document.getElementById('cfgCSAtt').value = config.cs_attendance_form_url || '';
+                    document.getElementById('cfgAnnForm').value = config.announcements_form_url || '';
+                })
+                .catch(function(e) { console.error(e); });
+        }
+
+        function saveConfig(e) {
+            e.preventDefault();
+            var data = {
+                brigade_form_url: document.getElementById('cfgBrigadeForm').value,
+                cs_form_url: document.getElementById('cfgCSForm').value,
+                brigade_attendance_form_url: document.getElementById('cfgBrigadeAtt').value,
+                cs_attendance_form_url: document.getElementById('cfgCSAtt').value,
+                announcements_form_url: document.getElementById('cfgAnnForm').value,
+            };
+            apiCall('saveConfig', data)
+                .then(function(result) {
+                    showMessage('configMessage', result.message || '✅ Config saved!', false);
+                })
+                .catch(function(err) {
+                    showMessage('configMessage', 'Failed to save config.', true);
+                });
+        }
+
+        // =============================================================
+        // NAV ROLE FILTER
+        // =============================================================
+        function updateNavForRole() {
+            var isAdmin = currentUser && currentUser.role === 'admin';
+            var items = document.querySelectorAll('.nav-scroll a.admin-only');
+            for (var i = 0; i < items.length; i++) {
+                items[i].style.display = isAdmin ? 'inline-flex' : 'none';
+            }
+        }
+
+        // =============================================================
+        // BOOT – show login page
+        // =============================================================
+        showPage('login');
+    </script>
 </body>
 </html>
